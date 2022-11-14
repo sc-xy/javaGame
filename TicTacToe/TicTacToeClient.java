@@ -22,6 +22,7 @@ public class TicTacToeClient implements TicTacToeConstants {
     private int clown = 0;
     private Scanner input = new Scanner(System.in);
     private int singal = 0;
+    private int status = 0;
 
     public static void main(String[] args) throws IOException {
         TicTacToeClient player = new TicTacToeClient();
@@ -61,10 +62,10 @@ public class TicTacToeClient implements TicTacToeConstants {
                 if (myNum == PLAYER1) {
                     sendMove();
                     showCell();
-                    receiveFromServer();
+                    status = receiveFromServer();
                     showCell();
                 } else if (myNum == PLAYER2) {
-                    receiveFromServer();
+                    status = receiveFromServer();
                     showCell();
                     if (!continueToPlay) {
                         // 特判一下
@@ -75,10 +76,30 @@ public class TicTacToeClient implements TicTacToeConstants {
                 }
             }
             // 游戏结束
+            if (status == PLAYER1_WON) {
+                // 1P赢
+                if (myToken == 'X') {
+                    System.out.println("I Won! 'X'");
+                } else if (myToken == 'O') {
+                    System.out.println("1P 'X' Won!");
+                }
+            } else if (status == PLAYER2_WON) {
+                if (myToken == 'X') {
+                    System.out.println("2P 'O' Won!");
+                } else if (myToken == 'O') {
+                    System.out.println("I Won! 'O'");
+                }
+            } else if (status == DRAW) {
+                // 平局
+                System.out.println("No Winner!");
+            }
             player.close();
-        } catch (IOException e) {
-            System.out.println(e);
-            System.out.println("连接服务器失败");
+        } catch (IOException e1) {
+            System.out.println(e1);
+            System.out.println("连接服务器失败！");
+        }catch(InterruptedException e2){
+            System.out.println(e2);
+            System.out.println("控制台错误！");
         }
     }
 
@@ -105,25 +126,19 @@ public class TicTacToeClient implements TicTacToeConstants {
         singal = CANTMOVE;
     }
 
-    public void receiveFromServer() throws IOException {
+    public int receiveFromServer() throws IOException {
         System.out.println("等待对手走棋ing...");
         int status = fromServer.readInt();
         if (status == PLAYER1_WON) {
             // 1P赢
             continueToPlay = false;
-            if (myToken == 'X') {
-                System.out.println("I Won! 'X'");
-            } else if (myToken == 'O') {
-                System.out.println("1P 'X' Won!");
+            if (myToken == 'O') {
                 receiveMove();
             }
         } else if (status == PLAYER2_WON) {
             continueToPlay = false;
             if (myToken == 'X') {
-                System.out.println("2P 'O' Won!");
                 receiveMove();
-            } else if (myToken == 'O') {
-                System.out.println("I Won! 'O'");
             }
         } else if (status == DRAW) {
             // 平局
@@ -133,10 +148,9 @@ public class TicTacToeClient implements TicTacToeConstants {
                 receiveMove();
             }
         } else {
-            // System.out.print(status);
             receiveMove();
         }
-
+        return status;
     }
 
     public void receiveMove() throws IOException {
@@ -145,14 +159,23 @@ public class TicTacToeClient implements TicTacToeConstants {
         cell[row - 1][clown - 1] = otherToken;
     }
 
-    private void showCell() {
+    private void showCell()throws IOException, InterruptedException {
         // 打印棋盘
-        System.out.println("棋盘为：");
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                System.out.print(cell[i][j] + " ");
+        new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+        System.out.println("棋局为：");
+        // 打印棋盘头
+        for (int i = 0; i < 8; i++) {
+            if (i % 2 == 0) {
+                System.out.print(i / 2);
+            } else {
+                System.out.print("|");
             }
-            System.out.println();
+        }
+        System.out.println();
+        // 打印棋盘主体
+        for (int i = 0; i < 3; i++) {
+            System.out.println("--------\n");
+            System.out.println(i+1 + "|" + cell[i][0] + "|" + cell[i][1] + "|" + cell[i][2] + "|");
         }
     }
 

@@ -1,4 +1,4 @@
-package TicTacToe;
+package com.xygame;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
